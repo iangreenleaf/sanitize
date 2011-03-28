@@ -29,7 +29,13 @@ class Sanitize; module Transformers
       # Delete any element that isn't in the config whitelist.
       unless @allowed_elements.include?(name)
         if @config[:escape_only]
-          node.replace(Nokogiri::XML::Text.new(node.to_s, node.document))
+          old_children = node.children
+          node.content = "foobar"
+          match = /(.+)foobar(.+)/.match( node.to_s )
+          node.before(Nokogiri::XML::Text.new(match[1], node.document))
+          node.before(old_children)
+          node.before(Nokogiri::XML::Text.new(match[2], node.document))
+          node.remove
         else
           # Elements like br, div, p, etc. need to be replaced with whitespace in
           # order to preserve readability.
